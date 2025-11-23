@@ -25,8 +25,8 @@ def init_supabase_client() -> Client:
         key = st.secrets["supabase"].get("service_role_key") or st.secrets["supabase"]["key"]
         return create_client(url, key)
     except Exception as e:
-        print(f"❌ Error al inicializar Supabase: {e}")
-        print("\n⚠️  Para subir imágenes necesitas configurar la Service Role Key")
+        print(f"ERROR: Error al inicializar Supabase: {e}")
+        print("\nADVERTENCIA: Para subir imágenes necesitas configurar la Service Role Key")
         print("   En .streamlit/secrets.toml agrega:")
         print('   service_role_key = "tu-service-role-key"')
         print("\n   Puedes obtenerla en: Supabase → Settings → API → service_role key")
@@ -40,16 +40,16 @@ def ensure_bucket_exists(supabase: Client):
         bucket_names = [b.name for b in buckets]
         
         if BUCKET_NAME not in bucket_names:
-            print(f"📦 Creando bucket '{BUCKET_NAME}'...")
+            print(f"Creando bucket '{BUCKET_NAME}'...")
             supabase.storage.create_bucket(
                 BUCKET_NAME,
                 options={"public": True}  # Bucket público para imágenes
             )
-            print(f"✅ Bucket '{BUCKET_NAME}' creado correctamente")
+            print(f"OK: Bucket '{BUCKET_NAME}' creado correctamente")
         else:
-            print(f"✅ Bucket '{BUCKET_NAME}' ya existe")
+            print(f"OK: Bucket '{BUCKET_NAME}' ya existe")
     except Exception as e:
-        print(f"⚠️  No se pudo verificar/crear bucket: {e}")
+        print(f"ADVERTENCIA: No se pudo verificar/crear bucket: {e}")
 
 def upload_image(supabase: Client, image_path: Path, sku: str) -> str:
     """Sube una imagen a Supabase Storage y retorna la URL pública."""
@@ -73,7 +73,7 @@ def upload_image(supabase: Client, image_path: Path, sku: str) -> str:
         
         return public_url
     except Exception as e:
-        print(f"   ❌ Error subiendo {image_path.name}: {e}")
+        print(f"   ERROR: Error subiendo {image_path.name}: {e}")
         return None
 
 def update_product_image_url(supabase: Client, sku: str, url: str):
@@ -82,16 +82,16 @@ def update_product_image_url(supabase: Client, sku: str, url: str):
         supabase.table('tb_catalogo_stock').update({'url_foto': url}).eq('sku', sku).execute()
         return True
     except Exception as e:
-        print(f"   ❌ Error actualizando URL para {sku}: {e}")
+        print(f"   ERROR: Error actualizando URL para {sku}: {e}")
         return False
 
 def main():
     """Función principal."""
-    print("🚀 Iniciando subida de imágenes a Supabase Storage...\n")
+    print("Iniciando subida de imágenes a Supabase Storage...\n")
     
     # Verificar que exista el archivo de datos
     if not DATA_FILE.exists():
-        print("❌ No se encontró catalog_data.json")
+        print("ERROR: No se encontró catalog_data.json")
         print("   Ejecuta primero: python generate_catalog_data.py")
         return
     
@@ -99,9 +99,9 @@ def main():
     with open(DATA_FILE, 'r', encoding='utf-8') as f:
         products = json.load(f)
     
-    print(f"📦 Se encontraron {len(products)} productos en catalog_data.json")
+    print(f"Se encontraron {len(products)} productos en catalog_data.json")
     products_with_images = [p for p in products if p['image_file']]
-    print(f"🖼️  Productos con imágenes: {len(products_with_images)}\n")
+    print(f"Productos con imágenes: {len(products_with_images)}\n")
     
     # Inicializar cliente de Supabase
     try:
@@ -112,7 +112,7 @@ def main():
     # Verificar/crear bucket
     ensure_bucket_exists(supabase)
     
-    print("\n📤 Subiendo imágenes...\n")
+    print("\nSubiendo imágenes...\n")
     
     # Subir imágenes y actualizar URLs
     success_count = 0
@@ -124,11 +124,11 @@ def main():
         image_path = CATALOG_DIR / image_file
         
         if not image_path.exists():
-            print(f"⚠️  {sku}: Imagen no encontrada ({image_file})")
+            print(f"ADVERTENCIA: {sku}: Imagen no encontrada ({image_file})")
             error_count += 1
             continue
         
-        print(f"📤 {sku}: Subiendo {image_file}...")
+        print(f"Subiendo {sku}: {image_file}...")
         
         # Subir imagen
         public_url = upload_image(supabase, image_path, sku)
@@ -136,7 +136,7 @@ def main():
         if public_url:
             # Actualizar base de datos
             if update_product_image_url(supabase, sku, public_url):
-                print(f"   ✅ URL actualizada en DB")
+                print(f"   OK: URL actualizada en DB")
                 success_count += 1
             else:
                 error_count += 1
@@ -145,20 +145,20 @@ def main():
     
     # Resumen
     print("\n" + "="*60)
-    print("📊 RESUMEN DE SUBIDA")
+    print("RESUMEN DE SUBIDA")
     print("="*60)
-    print(f"✅ Imágenes subidas exitosamente: {success_count}")
-    print(f"❌ Errores: {error_count}")
-    print(f"📦 Bucket usado: {BUCKET_NAME}")
+    print(f"OK: Imágenes subidas exitosamente: {success_count}")
+    print(f"ERROR: Errores: {error_count}")
+    print(f"Bucket usado: {BUCKET_NAME}")
     
     if success_count > 0:
-        print("\n🎉 ¡Proceso completado!")
+        print("\nProceso completado!")
         print(f"   Las imágenes están disponibles en:")
         print(f"   Supabase → Storage → {BUCKET_NAME}")
         print(f"\n   Las URLs ya están actualizadas en tb_catalogo_stock")
     
     if error_count > 0:
-        print(f"\n⚠️  Hubo {error_count} errores. Revisa los mensajes arriba.")
+        print(f"\nADVERTENCIA: Hubo {error_count} errores. Revisa los mensajes arriba.")
 
 if __name__ == "__main__":
     main()
