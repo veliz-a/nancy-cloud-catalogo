@@ -1,0 +1,82 @@
+COD 0406 - Vestido
+PEN 199.00
+
+COD 0301- Vestido
+PEN 199.00
+
+COD 0331 - Vestido
+PEN 199.00
+
+COD 0402 - Vestido
+PEN 149.00
+
+COD 0404 - Vestido
+PEN 160.00
+
+COD 0399 - Vestido Corto
+PEN 170.00
+
+COD 3006 - Conjunto
+PEN 189.00
+
+COD 1161 - Conjunto
+PEN 149.00
+
+Conjunto
+Tallas S, M, L
+PEN 149.00
+
+COD 0405 - Enterizo
+PEN 199.00
+
+COD 0405 - Enterizo
+PEN 199.00
+
+COD 0405 - Enterizo
+PEN 199.00
+
+COD 0303 - Gabardina
+PEN 199.00
+
+COD 0403 - Gabardina
+Tallas S, M, L
+PEN 219.00
+
+COD 0303 - Gabardina
+Tallas S, M, L
+PEN 219.00
+
+COD 0253 - Blazer
+PEN 119.00
+
+COD 0252 - BLAZER CATALAN
+Tallas S, M, L
+PEN 119.00
+
+COD 0328 - Vestisaco
+Loma Tallas S, M
+PEN 169.00
+
+COD 5022 - PANTALON CINTURA ALTA
+Tallas S, M, L
+PEN 89.00
+
+COD 5022 - Pantalón
+Tallas S, M y L Tela Catalán
+PEN 89.00
+
+COD 5022 - PANTALON CINTURA ALTA
+Tallas S, M, L
+PEN 89.00
+
+COD 1151 - Blusa
+Tallas S y M Tela Satén Monterrey
+PEN 69.00
+
+COD 1151 - BLUSA MANGA LARGA
+Tallas S, M
+PEN 69.00
+
+COD 1164 - POLO LAME
+Tallas S, M
+PEN 49.00
