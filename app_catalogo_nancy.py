@@ -8,14 +8,65 @@ from supabase import create_client, Client
 st.set_page_config(
     page_title="Nancy's Collection - Sistema de Inventario",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    page_icon="👗"
 )
 
-st.title("Nancy's Collection - Sistema de Gestión de Inventario")
+# CSS personalizado para mejorar la apariencia
 st.markdown("""
-Plataforma de consulta de inventario en tiempo real | Arquitectura Cloud-Native  
-Tecnologías: Supabase (PostgreSQL) | API Gateway | Integración ERP
-""")
+<style>
+    .product-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px 0;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+    }
+    .price-tag {
+        font-size: 24px;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .stock-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+    .stock-ok { background-color: #4caf50; color: white; }
+    .stock-low { background-color: #ff9800; color: white; }
+    .stock-out { background-color: #f44336; color: white; }
+    
+    /* Mejorar título principal */
+    h1 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+st.title("👗 Nancy's Collection - Catálogo Digital")
+st.markdown("""
+<div style='background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 10px; color: white; margin-bottom: 20px;'>
+    <b>Plataforma Cloud-Native</b> • Inventario en Tiempo Real • Integración ERP TumiSoft
+</div>
+""", unsafe_allow_html=True)
 
 
 # --- Conexión a Supabase (API REST) ---
@@ -94,20 +145,23 @@ with st.sidebar:
 
 # --- Filtros Principales ---
 st.markdown("---")
-st.markdown("### Filtros de Búsqueda")
+st.markdown("### 🔍 Filtros de Búsqueda")
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     modelos = ['Todos'] + sorted(df_catalogo['modelo'].unique().tolist())
-    modelo_seleccionado = st.selectbox('Modelo:', modelos)
+    modelo_seleccionado = st.selectbox('📦 Modelo:', modelos)
 
 with col2:
     colores = ['Todos'] + sorted(df_catalogo['color'].dropna().unique().tolist())
-    color_seleccionado = st.selectbox('Color:', colores)
+    color_seleccionado = st.selectbox('🎨 Color:', colores)
 
 with col3:
-    stock_minimo = st.number_input('Stock Mínimo:', min_value=0, value=0, step=1)
+    stock_minimo = st.number_input('📊 Stock Mínimo:', min_value=0, value=0, step=1)
+
+with col4:
+    vista = st.selectbox('👁️ Vista:', ['Galería', 'Tabla'])
 
 # Aplicar filtros
 df_filtrado = df_catalogo.copy()
@@ -122,50 +176,107 @@ df_filtrado = df_filtrado[df_filtrado['stock_actual'] >= stock_minimo]
 
 # --- Resultados ---
 st.markdown("---")
-st.markdown(f"### Resultados de Búsqueda: {len(df_filtrado)} productos")
+st.markdown(f"### 📦 Resultados: {len(df_filtrado)} productos encontrados")
 
 if df_filtrado.empty:
-    st.info("No hay productos que coincidan con los criterios de búsqueda.")
+    st.info("🔍 No hay productos que coincidan con los criterios de búsqueda. Intenta ajustar los filtros.")
 else:
-    # Tabla principal
-    display_df = df_filtrado[['sku', 'modelo', 'descripcion', 'talla', 'color', 'precio_soles', 'stock_actual', 'url_foto']].copy()
-    display_df.columns = ['SKU', 'Modelo', 'Descripción', 'Talla', 'Color', 'Precio (S/)', 'Stock', 'Imagen']
-    
-    st.dataframe(
-        display_df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Stock": st.column_config.ProgressColumn(
-                "Stock",
-                help="Unidades disponibles en almacén",
-                format="%d",
-                min_value=0,
-                max_value=int(df_catalogo['stock_actual'].max())
-            ),
-            "Precio (S/)": st.column_config.NumberColumn(
-                "Precio (S/)",
-                format="S/ %.2f"
-            ),
-            "Imagen": st.column_config.LinkColumn(
-                "Imagen",
-                display_text="Ver"
-            )
-        }
-    )
-    
-    # Alertas
+    # Alertas (antes de mostrar productos)
     col_a, col_b = st.columns(2)
     
     with col_a:
         agotados = df_filtrado[df_filtrado['stock_actual'] == 0]
         if not agotados.empty:
-            st.error(f"ALERTA: {len(agotados)} productos sin stock disponible")
+            st.error(f"⚠️ ALERTA: {len(agotados)} productos sin stock disponible")
     
     with col_b:
         criticos = df_filtrado[(df_filtrado['stock_actual'] > 0) & (df_filtrado['stock_actual'] <= 5)]
         if not criticos.empty:
-            st.warning(f"ADVERTENCIA: {len(criticos)} productos con stock crítico (≤5 unidades)")
+            st.warning(f"🔔 ADVERTENCIA: {len(criticos)} productos con stock crítico (≤5 unidades)")
+    
+    st.markdown("")  # Espacio
+    
+    # Vista según selección
+    if vista == 'Galería':
+        # Vista de galería con cards
+        cols = st.columns(3)
+        for idx, row in df_filtrado.iterrows():
+            with cols[idx % 3]:
+                # Determinar estado del stock
+                if row['stock_actual'] == 0:
+                    stock_class = "stock-out"
+                    stock_text = "AGOTADO"
+                elif row['stock_actual'] <= 5:
+                    stock_class = "stock-low"
+                    stock_text = f"BAJO STOCK ({row['stock_actual']})"
+                else:
+                    stock_class = "stock-ok"
+                    stock_text = f"DISPONIBLE ({row['stock_actual']})"
+                
+                # Card del producto
+                with st.container():
+                    # Imagen
+                    if pd.notna(row['url_foto']) and row['url_foto']:
+                        st.image(row['url_foto'], use_container_width=True)
+                    else:
+                        st.markdown("""
+                        <div style='background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%); 
+                                    height: 200px; display: flex; align-items: center; 
+                                    justify-content: center; border-radius: 10px;'>
+                            <span style='font-size: 48px;'>📷</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Información del producto
+                    st.markdown(f"**{row['modelo']}**")
+                    st.markdown(f"<span class='price-tag'>S/ {row['precio_soles']:.2f}</span>", unsafe_allow_html=True)
+                    
+                    col_info1, col_info2 = st.columns(2)
+                    with col_info1:
+                        st.caption(f"🎨 {row['color']}")
+                    with col_info2:
+                        st.caption(f"📏 {row['talla']}")
+                    
+                    st.markdown(f"<span class='stock-badge {stock_class}'>{stock_text}</span>", unsafe_allow_html=True)
+                    
+                    # Expandible con más detalles
+                    with st.expander("Ver detalles"):
+                        st.write(f"**SKU:** {row['sku']}")
+                        st.write(f"**Descripción:** {row['descripcion']}")
+                        if pd.notna(row['url_foto']) and row['url_foto']:
+                            st.markdown(f"[🔗 Ver imagen completa]({row['url_foto']})")
+                
+                st.markdown("")  # Espacio entre cards
+    
+    else:
+        # Vista de tabla con imágenes como miniaturas
+        display_df = df_filtrado[['url_foto', 'sku', 'modelo', 'talla', 'color', 'precio_soles', 'stock_actual']].copy()
+        display_df.columns = ['Imagen', 'SKU', 'Modelo', 'Talla', 'Color', 'Precio (S/)', 'Stock']
+        
+        st.dataframe(
+            display_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Imagen": st.column_config.ImageColumn(
+                    "Foto",
+                    help="Imagen del producto",
+                    width="small"
+                ),
+                "Stock": st.column_config.ProgressColumn(
+                    "Stock",
+                    help="Unidades disponibles en almacén",
+                    format="%d",
+                    min_value=0,
+                    max_value=int(df_catalogo['stock_actual'].max())
+                ),
+                "Precio (S/)": st.column_config.NumberColumn(
+                    "Precio (S/)",
+                    format="S/ %.2f"
+                )
+            },
+            height=600
+        )
 
 # --- Visualización Analytics ---
 if not df_filtrado.empty:
@@ -203,7 +314,14 @@ if not df_filtrado.empty:
 
 # --- Footer ---
 st.markdown("---")
-st.caption("""
-Arquitectura: Supabase (PostgreSQL) | Integración ERP | Analytics Pipeline  
-Sistema desarrollado con principios Cloud-Native para escalabilidad y alta disponibilidad
-""")
+st.markdown("""
+<div style='text-align: center; padding: 20px; color: #666;'>
+    <p><b>Nancy's Collection</b> - Sistema de Gestión de Inventario Cloud-Native</p>
+    <p style='font-size: 12px;'>
+        🔧 Supabase (PostgreSQL) | 🔗 API REST | 📊 Analytics | ⚡ Real-time sync con ERP TumiSoft
+    </p>
+    <p style='font-size: 11px; color: #999;'>
+        Desarrollado con Streamlit • Deploy-ready para Streamlit Cloud
+    </p>
+</div>
+""", unsafe_allow_html=True)
